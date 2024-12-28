@@ -1,4 +1,3 @@
-from openai import OpenAI
 import os
 import edge_tts
 import json

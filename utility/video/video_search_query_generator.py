@@ -1,22 +1,12 @@
-from openai import OpenAI
 import os
 import json
 import re
 from datetime import datetime
 from utility.utils import log_response,LOG_TYPE_GPT
+import torch
+from huggingface_hub import login
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, pipeline
 
-if len(os.environ.get("GROQ_API_KEY")) > 30:
-    from groq import Groq
-    model = "llama3-70b-8192"
-    client = Groq(
-        api_key=os.environ.get("GROQ_API_KEY"),
-        )
-else:
-    model = "gpt-4o"
-    OPENAI_API_KEY = os.environ.get('OPENAI_KEY')
-    client = OpenAI(api_key=OPENAI_API_KEY)
-
-log_directory = ".logs/gpt_logs"
 
 prompt = """# Instructions
 
@@ -37,7 +27,8 @@ The list must always contain the most relevant and appropriate query searches.
 ['Un chien', 'une voiture rapide', 'une maison rouge'] <= BAD, because the text query is NOT in English.
 
 Note: Your response should be the response only and no extra text or data.
-  """
+"""
+
 
 def fix_json(json_str):
     # Replace typographical apostrophes with straight quotes
@@ -48,13 +39,38 @@ def fix_json(json_str):
     json_str = json_str.replace('"you didn"t"', '"you didn\'t"')
     return json_str
 
+
+def load_model():
+    # Log in to Hugging Face # to do: put the tokens somewhere
+    HF_API_KEY = os.getenv('HF_KEY')
+    login(token=HF_API_KEY)
+
+    # Model and quantization configuration
+    model_name = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    quant_config = BitsAndBytesConfig(load_in_4bit=True)
+
+    # Load tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    # Load the model with quantization
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        quantization_config=quant_config,
+        device_map="auto"
+    )
+
+    # Define the text-generation pipeline
+    text_generator = pipeline("text-generation", model=model, tokenizer=tokenizer)
+
+    return text_generator, tokenizer
+
 def getVideoSearchQueriesTimed(script,captions_timed):
     end = captions_timed[-1][0][1]
     try:
-        
+
         out = [[[0,0],""]]
         while out[-1][0][1] != end:
-            content = call_OpenAI(script,captions_timed).replace("'",'"')
+            content = call_model(script,captions_timed).replace("'",'"')
             try:
                 out = json.loads(content)
             except Exception as e:
@@ -65,29 +81,26 @@ def getVideoSearchQueriesTimed(script,captions_timed):
         return out
     except Exception as e:
         print("error in response",e)
-   
+
     return None
 
-def call_OpenAI(script,captions_timed):
-    user_content = """Script: {}
-Timed Captions:{}
-""".format(script,"".join(map(str,captions_timed)))
+
+def call_model(script,captions_timed):
+    user_content = """Script: {} Timed Captions:{}""".format(script,"".join(map(str,captions_timed)))
     print("Content", user_content)
-    
-    response = client.chat.completions.create(
-        model= model,
-        temperature=1,
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": user_content}
-        ]
-    )
-    
-    text = response.choices[0].message.content.strip()
+    text_generator, tokenizer = load_model()
+
+    prompt = [{"role": "system", "content": prompt}, {"role": "user", "content": user_content}]
+    sequences = text_generator(prompt, max_length=1000, num_return_sequences=1, pad_token_id=tokenizer.eos_token_id)
+
+    content = sequences[0]['generated_text'][2]['content']
+    text = content.replace("\n", "").strip()
     text = re.sub('\s+', ' ', text)
-    print("Text", text)
     log_response(LOG_TYPE_GPT,script,text)
+   
+    print("Text", text)
     return text
+
 
 def merge_empty_intervals(segments):
     merged = []
@@ -99,7 +112,7 @@ def merge_empty_intervals(segments):
             j = i + 1
             while j < len(segments) and segments[j][1] is None:
                 j += 1
-            
+
             # Merge consecutive None intervals with the previous valid URL
             if i > 0:
                 prev_interval, prev_url = merged[-1]
@@ -109,10 +122,10 @@ def merge_empty_intervals(segments):
                     merged.append([interval, prev_url])
             else:
                 merged.append([interval, None])
-            
+
             i = j
         else:
             merged.append([interval, url])
             i += 1
-    
+
     return merged
