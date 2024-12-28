@@ -45,26 +45,28 @@ def generate_script(topic):
               For instance, if the user asks for:
               *Weird facts*
               You would produce content like this:
-
-              "**Weird facts you didn’t know**:",
-              "Bananas are berries, but strawberries aren’t.",
-              "A single cloud can weigh over a million pounds.",
-              "There’s a species of jellyfish that is biologically immortal.",
-              "Honey never spoils. Archaeologists found 3,000-year-old honey in Egyptian tombs that’s still edible.",
-              "The shortest war in history was between Britain and Zanzibar in 1896. It lasted just 38 minutes.",
-              "Octopuses have three hearts and blue blood."
+              
+              "**Weird facts you didn’t know**\n
+              Bananas are berries, but strawberries aren’t.\n
+              A single cloud can weigh over a million pounds.\n
+              There’s a species of jellyfish that is biologically immortal.\n
+              Honey never spoils. Archaeologists found 3,000-year-old honey in Egyptian tombs that’s still edible.\n
+              The shortest war in history was between Britain and Zanzibar in 1896. It lasted just 38 minutes.\n
+              Octopuses have three hearts and blue blood"
+              
 
               If user asks for
               *Hitler*
               You would produce content like this:
-
-              "**Facts about hitler you didn't know about**:",
-              "Hitler was a failed artist, his paintings were so bad they're now considered a joke.",
-              "He was a heavy smoker, and his smoking habit led to a severe case of lung cancer.",
-              "Before becoming a dictator, Hitler was a struggling artist in Vienna, living in poverty and relying on charity.",
-              "Hitler's first wife, Anna, died under mysterious circumstances, and many believe he was involved in her death.",
-              "He was a fan of horror movies and enjoyed watching horror films, especially those of Nosferatu.",
-              "Hitler's love for animals was so strong that he had a menagerie at his Berchtesgaden home, with over 70 animals, including a lion, a bear, and a kangaroo."
+            
+              "**Facts about hitler you didn't know about**\n
+              Hitler was a failed artist, his paintings were so bad they're now considered a joke.\n
+              He was a heavy smoker, and his smoking habit led to a severe case of lung cancer.\n
+              Before becoming a dictator, Hitler was a struggling artist in Vienna, living in poverty and relying on charity.\n
+              Hitler's first wife, Anna, died under mysterious circumstances, and many believe he was involved in her death.\n
+              He was a fan of horror movies and enjoyed watching horror films, especially those of Nosferatu.\n
+              Hitler's love for animals was so strong that he had a menagerie at his Berchtesgaden home, with over 70 animals, including a lion, a bear, and a kangaroo"
+            
 
 
               Here’s your task:
