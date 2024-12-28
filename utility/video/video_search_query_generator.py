@@ -90,7 +90,7 @@ def call_model(script,captions_timed):
     text_generator, tokenizer = load_model()
 
     prompt = [{"role": "system", "content": prompt}, {"role": "user", "content": user_content}]
-    sequences = text_generator(prompt, max_length=1000, num_return_sequences=1, pad_token_id=tokenizer.eos_token_id)
+    sequences = text_generator(prompt, max_length=None, num_return_sequences=1, pad_token_id=tokenizer.eos_token_id)
 
     content = sequences[0]['generated_text'][2]['content']
     text = content.replace("\n", "").strip()
